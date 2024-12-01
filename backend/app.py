@@ -1,37 +1,40 @@
+import os
 from flask import Flask, request, jsonify
 import cv2
-import os
 import numpy as np
 from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 
-# Directory to save classifier files
 CLASSIFIER_DIR = 'classifiers'
 UPLOAD_FOLDER = 'uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 @app.route('/train', methods=['POST'])
 def train_user():
-    name = request.form['name'].strip()  # Remove leading/trailing spaces
+    name = request.form['name'].strip()
     if not name:
         return jsonify({'error': 'Name is required'}), 400
 
     images = request.files.getlist('images')
-    if not images:
-        return jsonify({'error': 'No images provided'}), 400
+    if len(images) < 10:  # Lowered minimum
+        return jsonify({'error': 'At least 10 images are required for training'}), 400
 
-    user_dir = os.path.join(CLASSIFIER_DIR, secure_filename(name))  # Ensure a valid folder name
+    user_dir = os.path.join(CLASSIFIER_DIR, secure_filename(name))
     os.makedirs(user_dir, exist_ok=True)
 
-    # Save images for training
     for i, img in enumerate(images):
         img_path = os.path.join(user_dir, f'{i}.jpg')
         img.save(img_path)
 
-    # Train classifier
     classifier_path = os.path.join(user_dir, 'classifier.xml')
     train_classifier(user_dir, classifier_path)
+
+    # Delete the training images after creating the classifier
+    for file in os.listdir(user_dir):
+        file_path = os.path.join(user_dir, file)
+        if file.endswith('.jpg') or file.endswith('.png'):
+            os.remove(file_path)
 
     return jsonify({'message': 'User trained successfully', 'classifier': classifier_path})
 
@@ -48,7 +51,6 @@ def train_classifier(user_dir, classifier_path):
             if file.endswith('jpg') or file.endswith('png'):
                 image_path = os.path.join(subdir, file)
                 image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
-
                 user_name = os.path.basename(subdir)
 
                 if user_name not in label_map:
@@ -56,7 +58,6 @@ def train_classifier(user_dir, classifier_path):
                     label_counter += 1
 
                 label = label_map[user_name]
-
                 images.append(image)
                 labels.append(label)
 
