@@ -6,6 +6,8 @@ import 'dart:io';
 import 'dart:convert';
 import 'package:http_parser/http_parser.dart';
 
+import '../env_variables.dart';
+
 class LoginScreen extends StatefulWidget {
   @override
   _LoginScreenState createState() => _LoginScreenState();
@@ -46,8 +48,8 @@ class _LoginScreenState extends State<LoginScreen> {
     }
 
     // Prepare the image file to send
-    var request = http.MultipartRequest(
-        'POST', Uri.parse('http://192.168.181.73:5000/login'));
+    var request =
+        http.MultipartRequest('POST', Uri.parse('${requestUrl}/login'));
     request.files.add(await http.MultipartFile.fromPath(
       'image',
       _image!.path,
@@ -64,7 +66,14 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
-      final username = data['username']; // Extract username
+      final allMatches = data["all_matches"];
+      final username = data['best_match']['user']; // Accessing the username
+
+      print("Matching percentages with usernames:");
+      for (var match in allMatches) {
+        print(
+            "Username: ${match['user']}, Match Percentage: ${match['match_percentage']}%");
+      }
 
       if (username == null || username.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(

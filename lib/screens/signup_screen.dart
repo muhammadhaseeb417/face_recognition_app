@@ -8,6 +8,8 @@ import 'package:camera/camera.dart';
 import 'package:image/image.dart' as img;
 import 'package:path_provider/path_provider.dart';
 
+import '../env_variables.dart';
+
 class SignupScreen extends StatefulWidget {
   @override
   _SignupScreenState createState() => _SignupScreenState();
@@ -144,8 +146,8 @@ class _SignupScreenState extends State<SignupScreen> {
     });
 
     try {
-      var request = http.MultipartRequest(
-          'POST', Uri.parse('http://192.168.181.73:5000/train'));
+      var request =
+          http.MultipartRequest('POST', Uri.parse('${requestUrl}/train'));
       request.fields['name'] = userName;
 
       // Upload images
@@ -189,49 +191,52 @@ class _SignupScreenState extends State<SignupScreen> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          // Display the camera preview only if it's initialized
-          if (_controller != null && _controller!.value.isInitialized)
-            SizedBox(
-              height: 300,
-              child: CameraPreview(_controller!),
+      body: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Display the camera preview only if it's initialized
+            if (_controller != null && _controller!.value.isInitialized)
+              SizedBox(
+                height: 300,
+                child: CameraPreview(_controller!),
+              ),
+            SizedBox(height: 16),
+            TextField(
+              onChanged: (value) {
+                userName = value;
+              },
+              decoration: InputDecoration(labelText: 'Enter Name'),
             ),
-          SizedBox(height: 16),
-          TextField(
-            onChanged: (value) {
-              userName = value;
-            },
-            decoration: InputDecoration(labelText: 'Enter Name'),
-          ),
-          SizedBox(height: 16),
-          // Image count display
-          Text(
-            'Images Captured: ${trainingImages.length} / $MAX_TRAINING_IMAGES',
-            style: TextStyle(fontSize: 16),
-          ),
-          SizedBox(height: 8),
-          // Progress bar
-          LinearProgressIndicator(
-            value: trainingImages.length / MAX_TRAINING_IMAGES,
-            backgroundColor: Colors.grey[300],
-            valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
-          ),
-          SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: isCapturing ? stopCapturing : startCapturing,
-            child: isCapturing
-                ? Text('Stop Capturing')
-                : Text('Start Capturing Faces'),
-          ),
-          SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: isTraining ? null : signupAndTrain,
-            child: isTraining
-                ? CircularProgressIndicator()
-                : Text('Signup & Train'),
-          ),
-        ],
+            SizedBox(height: 16),
+            // Image count display
+            Text(
+              'Images Captured: ${trainingImages.length} / $MAX_TRAINING_IMAGES',
+              style: TextStyle(fontSize: 16),
+            ),
+            SizedBox(height: 8),
+            // Progress bar
+            LinearProgressIndicator(
+              value: trainingImages.length / MAX_TRAINING_IMAGES,
+              backgroundColor: Colors.grey[300],
+              valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+            ),
+            SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: isCapturing ? stopCapturing : startCapturing,
+              child: isCapturing
+                  ? Text('Stop Capturing')
+                  : Text('Start Capturing Faces'),
+            ),
+            SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: isTraining ? null : signupAndTrain,
+              child: isTraining
+                  ? CircularProgressIndicator()
+                  : Text('Signup & Train'),
+            ),
+          ],
+        ),
       ),
     );
   }

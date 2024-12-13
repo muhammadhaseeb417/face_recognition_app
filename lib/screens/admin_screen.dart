@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+import '../env_variables.dart';
+
 class AdminScreen extends StatefulWidget {
   @override
   _AdminScreenState createState() => _AdminScreenState();
@@ -11,8 +13,7 @@ class _AdminScreenState extends State<AdminScreen> {
   List<String> users = [];
 
   Future<void> fetchUsers() async {
-    final response =
-        await http.get(Uri.parse('http://192.168.181.73:5000/admin/users'));
+    final response = await http.get(Uri.parse('${requestUrl}/admin/users'));
     if (response.statusCode == 200) {
       setState(() {
         users = List<String>.from(jsonDecode(response.body));
@@ -22,7 +23,7 @@ class _AdminScreenState extends State<AdminScreen> {
 
   Future<void> deleteUser(String user) async {
     final response = await http.delete(
-      Uri.parse('http://192.168.181.73:5000/admin/users'),
+      Uri.parse('${requestUrl}/admin/users'),
       body: {'name': user},
     );
     if (response.statusCode == 200) {
